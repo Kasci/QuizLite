@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Chat Demo</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="./quiz.json" type="application/json" crossorigin></script>
+</head>
+<body class="">
+<!--<body class="dark:bg-gray-900">-->
+
+<div id="app" class="w-screen h-screen flex flex-col" ></div>
+
+<script type="text/babel">
+    let quiz = {};
+    fetch('./quiz.json')
+        .then(response => response.json())
+        .then(data => quiz = data)
+        .catch(error => console.log(error));
+
+    function QuizWS() {
+        if (!(this instanceof QuizWS)) {
+            return new QuizWS();
+        }
+
+        // Change this to your WebSocket server URL
+        this.ws = new WebSocket("ws://localhost:8080");
+        this.onMessageHook = null;
+
+        this.ws.onopen = () => {
+            console.log("✅ Connected to WebSocket server.");
+        };
+        //
+        this.ws.onmessage = (event) => {
+            // console.log("📩 Received: " + event.data);
+            if (this.onMessageHook) this.onMessageHook(event.data);
+        };
+
+        this.ws.onerror = (error) => {
+            console.log("❌ Error: " + error.message);
+        };
+
+        this.ws.onclose = () => {
+            console.log("🔌 Disconnected from server.");
+        };
+
+        this.setOnMessageHook = (callback) => {
+            this.onMessageHook = callback;
+            return this;
+        };
+
+
+        this.sendMessage = (msg) => {
+            if (msg && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify(msg));
+            } else {
+                console.log("⚠️ Cannot send. WebSocket not connected.");
+            }
+            return this;
+        }
+
+    }
+
+    function Main({setType}) {
+        return (
+            <div>
+                <h1 className="p-10 text-5xl font-bold text-center">QuizLite</h1>
+                <div className="flex flex-row justify-center">
+                    <button className="p-4 m-4 border border-solid" onClick={() => setType(1)}>ADMIN</button>
+                    <button className="p-4 m-4 border border-solid" onClick={() => setType(2)}>CLIENT</button>
+                </div>
+            </div>
+        );
+    }
+
+    function ListOfTopics({topic, setTopic, setQuestion}) {
+        return (
+            <div className="grid grid-cols-4">
+                {
+                    quiz.map((t) => {
+                        return (<button className={"px-4 py-1 m-1 border border-solid" + (t.topic === topic.topic ? " bg-red-400" : " ")}  key={t.topic} onClick={() => {
+                            if (t.topic === topic.topic) {
+                                qws.sendMessage({"topic": ""});
+                                setTopic({});
+                                setQuestion({});
+                            } else {
+                                qws.sendMessage(t);
+                                setTopic(t);
+                                setQuestion({});
+                            }
+                        }}>{t.topic}</button>)
+                    })
+                }
+            </div>
+        )
+    }
+
+    let showAnswers = false;
+    function prepareQuestion(question) {
+        if (!showAnswers) {
+            return {"type": question.type, "question": question.question, "choices": question.choices, "note": question.note}
+        }
+        return question;
+    }
+
+    function sendQuestion(q, setQuestion) {
+        let qq = prepareQuestion(q);
+        qws.sendMessage(qq);
+        setQuestion(qq);
+    }
+
+    function ListOfQuestions({topic, question, setQuestion}) {
+        const zip = (a, b) => a.map((k, i) => [k, b[i]]);
+        if (topic.questions) {
+            return (<div className="grid grid-cols-8 grid-flow-row auto-rows-min">
+                {
+                    zip(topic.questions.map((q) => <button className={"px-4 py-1 m-1 border border-solid col-span-3" + (q.question === question.question ? " bg-red-400" : " ")} key={q.question} onClick={() => {
+                        showAnswers = false;
+                        sendQuestion(q, setQuestion);
+                    }}>{q.question}</button>),
+                    topic.questions.map((q) => <button className={"px-4 py-1 m-1 border border-solid" + (q.question === question.question && q.answer === question.answer ? " bg-red-400" : " ")} key={q.answer} onClick={() => {
+                        showAnswers = true;
+                        sendQuestion(q, setQuestion);
+                    }}>A</button>))
+                }
+            </div>);
+        }
+    }
+
+    const State = {
+        MAIN: 0,
+        ADMIN: 1,
+        CLIENT: 2,
+        BLANK: 3,
+        SCORE: 4
+    }
+
+    function AdminToolbar({state, setState, topic, question, setQuestion}) {
+        return (
+            <div className="p-4 flex flex-row justify-center">
+                <button className="p-4 mx-4 border border-solid" onClick={()=>{
+                    if (!topic || !topic.questions || topic.questions.length === 0) return;
+                    let i = topic.questions.findIndex((it) => it.question === question.question);
+                    if (i > 0) {
+                        sendQuestion(topic.questions[i-1], setQuestion);
+                    }
+                }}>&lt;</button>
+                <button className="p-4 mx-4 border border-solid" onClick={()=>{
+                    if (!topic || !topic.questions || topic.questions.length === 0) return;
+                    let i = topic.questions.findIndex((it) => it.question === question.question);
+                    if (i < topic.questions.length - 1) {
+                        sendQuestion(topic.questions[i+1], setQuestion);
+                    }
+                }}>&gt;</button>
+                <button className={"p-4 mx-4 border border-solid" + (state === State.BLANK ? " bg-red-400" : " ")} onClick={()=>{setState(State.BLANK);qws.sendMessage({"blank": "blank"});}}>BLANK</button>
+                <button className={"p-4 mx-4 border border-solid" + (state === State.SCORE ? " bg-red-400" : " ")} onClick={()=>{setState(State.SCORE);qws.sendMessage({"score": "score"});}}>SCORE</button>
+                <button className={"p-4 mx-4 border border-solid" + (state === State.CLIENT ? " bg-red-400" : " ")} onClick={()=>{setState(State.CLIENT);qws.sendMessage({"client": "client"});}}>CLIENT</button>
+            </div>
+        )
+    }
+
+    function ShowQuestionAdmin({topic, question}) {
+        if (topic && question) return (
+            <div className="p-4 w-parent h-full flex flex-col border border-solid border-2 border-red-500">
+                <div className="p-4 text-xl font-bold text-center">{topic.topic || "---"}</div>
+                <div className={"h-full flex flex-col border border-solid border-2 border-gray-500"}>
+                    {
+                        question.type === "simple" ?
+                            <div className={"p-4 text-2xl font-bold text-center p-4"}>{question.question}</div>
+                            : <div className={"hidden"}></div>
+                    }
+                    {
+                        question.type === "multi" ?
+                            <div>
+                                <div className={"p-4 text-2xl font-bold text-center p-4"}>{question.question}</div>
+                                <div className="grid grid-cols-2">
+                                    {
+                                        question.choices.map(str => <div className={"text-xl font-bold text-center p-4 text-sky-900"}>{str}</div>)
+                                    }
+                                </div>
+                            </div> : <div className={"hidden"}></div>
+                    }
+                    <div className={question.note === undefined ? "hidden": ("text-lg font-bold text-right p-4 bg-color-blue")}>{question.note}</div>
+                    <div className={question.answer === undefined ? "hidden ": ("text-2xl font-bold text-center p-4 text-sky-900")}>{question.answer}</div>
+                    <div className={question.explanation === undefined ? "hidden ": ("text-lg font-bold text-right p-4 text-sky-900")}>{question.explanation}</div>
+                </div>
+            </div>
+        )
+    }
+
+    function ShowScoreAdmin({teams, setTeams}) {
+        const [name, setName] = React.useState("");
+        return (
+            <div className="p-4 w-parent h-full flex flex-col border border-solid border-2 border-sky-500">
+                {
+                    teams.map((t, i) => <div className={"flex flex-row"} key={t.name}>
+                        <div className={"text-xl font-bold text-center p-4"}>{t.name}</div>
+                        <div className={"text-xl font-bold text-center p-4"}>{t.score}</div>
+                        <button className={"p-2 border border-solid"} onClick={() => {
+                            setTeams(teams => {
+                                let t = teams.map((tt, ii) => {
+                                    if (i === ii) {
+                                        return {name: tt.name, score: tt.score + 1}
+                                    }
+                                    return tt;
+                                });
+                                qws.sendMessage({"teams": t});
+                                return t;
+                            });
+                        }}>+</button>
+                        <button className={"p-2 border border-solid"} onClick={() => {
+                            setTeams(teams => {
+                                let t = teams.map((tt, ii) => {
+                                    if (i === ii) {
+                                        return {name: tt.name, score: tt.score - 1}
+                                    }
+                                    return tt;
+                                });
+                                qws.sendMessage({"teams": t});
+                                return t;
+                            });
+                        }}>-</button>
+                    </div>)
+                }
+                <div className="flex flex-row justify-center">
+                    <input className="p-4 m-4 border border-solid" type="text" placeholder="Enter team name" onChange={e => setName(e.target.value)}/>
+                    <button className="p-4 m-4 border border-solid" onClick={() => {
+                        setTeams(teams => {
+                            let t = [
+                                ...teams,
+                                {name: name, score: 0}
+                            ];
+                            qws.sendMessage({"teams": t});
+                            return t;
+                        });
+                    }}>SUBMIT</button>
+                </div>
+            </div>
+        )
+    }
+
+    function Admin({topic, setTopic, question, setQuestion, teams, setTeams}) {
+        const [state, setState] = React.useState(State.CLIENT); // To higlight the client button
+        return (
+            <div className="m-4 w-parent h-full flex flex-col">
+                <div className="text-lg font-bold text-left">Topics:</div>
+                <ListOfTopics topic={topic} setTopic={setTopic} setQuestion={setQuestion}/>
+                <div className="text-lg font-bold text-left">Questions:</div>
+                <ListOfQuestions topic={topic} question={question} setQuestion={setQuestion}/>
+                <AdminToolbar state={state} setState={setState} topic={topic} question={question} setQuestion={setQuestion}/>
+                {
+                    state === State.CLIENT
+                        ? <ShowQuestionAdmin topic={topic} question={question}/>
+                        : <div className={"hidden"}></div>
+                }
+                {
+                    state === State.SCORE
+                        ? <ShowScoreAdmin teams={teams} setTeams={setTeams} />
+                        : <div className={"hidden"}></div>
+                }
+            </div>
+        )
+    }
+
+    function Client({topic, question}) {
+        return (
+            <div className="p-4 w-parent h-full flex flex-col text-zinc-900">
+                <div className="p-10 text-5xl font-bold text-center">{topic.topic || "---"}</div>
+                <div className="h-full flex flex-col border border-solid border-2 border-gray-500">
+                    {
+                        question.type === "simple" ?
+                            <div className="p-10 text-8xl font-bold text-center p-4">{question.question}</div>
+                         : <div className={"hidden"}></div>
+                    }
+                    {
+                        question.type === "multi" ?
+                            <div className="h-full flex flex-col">
+                                <div className="p-10 text-8xl font-bold text-center p-4">{question.question}</div>
+                                <div className="grid grid-cols-2">
+                                    {
+                                        question.choices.map(str => <div className={"text-6xl font-bold text-center p-4 " + (question.answer === undefined ? "text-zinc-900" : question.answer === str ? "text-sky-900" : "text-neutral-300")}>{str}</div>)
+                                    }
+                                </div>
+                            </div>: <div className={"hidden"}></div>
+                    }
+                    <div className="p-10 text-8xl font-bold text-center text-sky-900 p-4">{question.answer}</div>
+                </div>
+            </div>
+        )
+    }
+
+    function Score({teams, setTeams}) {
+        return (
+            <div className="p-4 w-parent h-full flex flex-col">
+                <div className="p-10 text-5xl font-bold text-center">Score</div>
+                <div className="p-4 w-parent h-full flex flex-col border border-solid border-2 border-sky-500">
+                    {
+                        teams.map((t, i) => <div className={"flex flex-row"} key={t.name}>
+                            <div className={"text-xl font-bold text-center p-4"}>{t.name}</div>
+                            <div className={"text-xl font-bold text-center p-4"}>{t.score}</div>
+                        </div>)
+                    }
+                </div>
+            </div>
+        )
+    }
+
+    function Quiz() {
+        const [type, setType] = React.useState(0);
+        const [topic, setTopic] = React.useState({})
+        const [question, setQuestion] = React.useState({})
+        const [teams, setTeams] = React.useState([]);
+
+        function clientCallback(event) {
+            let data = JSON.parse(event);
+            if (data.hasOwnProperty("topic")) {
+                setTopic(data)
+                setQuestion({})
+            } else if (data.hasOwnProperty("question")) {
+                setQuestion(data)
+            } else if (data.hasOwnProperty("teams")) {
+                setTeams(data.teams);
+            } else if (data.hasOwnProperty("blank")) {
+                setType(State.BLANK);
+            } else if (data.hasOwnProperty("score")) {
+                setType(State.SCORE);
+            } else if (data.hasOwnProperty("client")) {
+                setType(State.CLIENT);
+            }
+        }
+
+        if (type === State.MAIN) return <Main setType={setType} />
+        else if (type === State.ADMIN) {
+            return <Admin topic={topic} setTopic={setTopic} question={question} setQuestion={setQuestion} teams={teams} setTeams={setTeams}/>
+        } else if (type === State.CLIENT) {
+            qws.setOnMessageHook(clientCallback);
+            return <Client topic={topic} question={question} />
+        } else if (type === State.BLANK) {
+            return <div></div>
+        } else if (type === State.SCORE) {
+            return <Score teams={teams} setTeams={setTeams}/>
+        }
+        else return <div>ERROR</div>
+    }
+
+    const qws = new QuizWS();
+
+    // TODO: uncomment it
+    // window.onbeforeunload = function() { return "Your work will be lost."; };
+    const container = document.getElementById('app');
+    const root = ReactDOM.createRoot(container);
+    root.render(<Quiz />)
+</script>
+
+</body>
+</html>

@@ -1,0 +1,60 @@
+[
+  {
+    "topic": "Prezidenti",
+    "questions": [
+      { "type": "simple", "question": "Kdo je prezidentem USA?", "note": "This is note to the question", "answer": "Joe Biden", "explanation": "This is explanation to the answer" },
+      { "type": "simple", "question": "Kdo je prezidentem ČR?", "answer": "Petr Pavel" },
+      { "type": "simple", "question": "Kdo je prezidentem Francie?", "answer": "Emmanuel Macron" },
+      { "type": "simple", "question": "Kdo je prezidentem Ruska?", "answer": "Vladimir Putin" },
+      { "type": "multi", "question": "Kto je prezidentom Nemecka?", "note": "This is note", "choices": ["Frank-Walter Steinmeier", "Friedrich Merz", "Martin Luther", "Angela Merkel"], "answer": "Frank-Walter Steinmeier", "explanation": "This is explanation"}
+    ]
+  },
+  {
+    "topic": "Zvířata",
+    "questions": [
+      { "type": "simple", "question": "Jaké je největší zvíře na světě?","answer": "Modrý velryba" },
+      { "type": "simple", "question": "Jaké je nejrychlejší zvíře na světě?","answer": "Peregrin" },
+      { "type": "simple", "question": "Jaké je nejmenší zvíře na světě?","answer": "Bumblebee bat" }
+    ]
+  },
+  {
+    "topic": "Jídlo",
+    "questions": [
+      { "type": "simple", "question": "Jaké je nejoblíbenější jídlo na světě?", "answer": "Pizza" },
+      { "type": "simple", "question": "Jaké je nejoblíbenější jídlo v ČR?", "answer": "Svíčková" },
+      { "type": "simple", "question": "Jaké je nejoblíbenější jídlo v USA?", "answer": "Hamburger" }
+    ]
+  },
+  {
+    "topic": "Sport",
+    "questions": [
+      { "type": "simple", "question": "Jaký je nejoblíbenější sport na světě?", "answer": "Fotbal" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější sport v ČR?", "answer": "Hokej" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější sport v USA?", "answer": "Americký fotbal" }
+    ]
+  },
+  {
+    "topic": "Hudba",
+    "questions": [
+      { "type": "simple", "question": "Jaký je nejoblíbenější žánr hudby na světě?", "answer": "Pop" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější žánr hudby v ČR?", "answer": "Rock" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější žánr hudby v USA?", "answer": "Hip-hop" }
+    ]
+  },
+  {
+    "topic": "Filmy",
+    "questions": [
+      { "type": "simple", "question": "Jaký je nejoblíbenější film na světě?", "answer": "Titanic" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější film v ČR?", "answer": "Pelíšky" },
+      { "type": "simple", "question": "Jaký je nejoblíbenější film v USA?", "answer": "Avatar" }
+    ]
+  },
+  {
+    "topic": "Knihy",
+    "questions": [
+      { "type": "simple", "question": "Jaká je nejoblíbenější kniha na světě?", "answer": "Harry Potter" },
+      { "type": "simple", "question": "Jaká je nejoblíbenější kniha v ČR?", "answer": "Babička" },
+      { "type": "simple", "question": "Jaká je nejoblíbenější kniha v USA?", "answer": "Hobit" }
+    ]
+  }
+]
