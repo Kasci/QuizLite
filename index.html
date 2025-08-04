@@ -8,6 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="./quiz.json" type="application/json" crossorigin></script>
+    <style>
+        .my-box {
+            box-shadow:
+                    rgba(0, 0, 0, 0.15) -0.25rem -0.25rem 8px,
+                    rgba(0, 0, 0, 0.25) 0.25rem 0.25rem 4px;
+        }
+    </style>
 </head>
 <body class="">
 <!--<body class="dark:bg-gray-900">-->
@@ -69,8 +76,8 @@
             <div>
                 <h1 className="p-10 text-5xl font-bold text-center">QuizLite</h1>
                 <div className="flex flex-row justify-center">
-                    <button className="p-4 m-4 border border-solid" onClick={() => setType(1)}>ADMIN</button>
-                    <button className="p-4 m-4 border border-solid" onClick={() => setType(2)}>CLIENT</button>
+                    <button className="p-4 m-4 my-box rounded-full " onClick={() => setType(1)}>ADMIN</button>
+                    <button className="p-4 m-4 my-box rounded-full " onClick={() => setType(2)}>CLIENT</button>
                 </div>
             </div>
         );
@@ -81,7 +88,7 @@
             <div className="grid grid-cols-4">
                 {
                     quiz.map((t) => {
-                        return (<button className={"px-4 py-1 m-1 border border-solid" + (t.topic === topic.topic ? " bg-red-400" : " ")}  key={t.topic} onClick={() => {
+                        return (<button className={"px-4 py-1 m-1 my-box rounded-full " + (t.topic === topic.topic ? " bg-red-400" : " ")}  key={t.topic} onClick={() => {
                             if (t.topic === topic.topic) {
                                 qws.sendMessage({"topic": ""});
                                 setTopic({});
@@ -117,11 +124,11 @@
         if (topic.questions) {
             return (<div className="grid grid-cols-8 grid-flow-row auto-rows-min">
                 {
-                    zip(topic.questions.map((q) => <button className={"px-4 py-1 m-1 border border-solid col-span-3" + (q.question === question.question ? " bg-red-400" : " ")} key={q.question} onClick={() => {
+                    zip(topic.questions.map((q) => <button className={"px-4 py-1 m-1 my-box rounded-full  col-span-3" + (q.question === question.question ? " bg-red-400" : " ")} key={q.question} onClick={() => {
                         showAnswers = false;
                         sendQuestion(q, setQuestion);
                     }}>{q.question}</button>),
-                    topic.questions.map((q) => <button className={"px-4 py-1 m-1 border border-solid" + (q.question === question.question && q.answer === question.answer ? " bg-red-400" : " ")} key={q.answer} onClick={() => {
+                    topic.questions.map((q) => <button className={"px-4 py-1 m-1 my-box rounded-full " + (q.question === question.question && q.answer === question.answer ? " bg-red-400" : " ")} key={q.answer} onClick={() => {
                         showAnswers = true;
                         sendQuestion(q, setQuestion);
                     }}>A</button>))
@@ -141,23 +148,23 @@
     function AdminToolbar({state, setState, topic, question, setQuestion}) {
         return (
             <div className="p-4 flex flex-row justify-center">
-                <button className="p-4 mx-4 border border-solid" onClick={()=>{
+                <button className="p-4 mx-4 my-box rounded-full " onClick={()=>{
                     if (!topic || !topic.questions || topic.questions.length === 0) return;
                     let i = topic.questions.findIndex((it) => it.question === question.question);
                     if (i > 0) {
                         sendQuestion(topic.questions[i-1], setQuestion);
                     }
                 }}>&lt;</button>
-                <button className="p-4 mx-4 border border-solid" onClick={()=>{
+                <button className="p-4 mx-4 my-box rounded-full " onClick={()=>{
                     if (!topic || !topic.questions || topic.questions.length === 0) return;
                     let i = topic.questions.findIndex((it) => it.question === question.question);
                     if (i < topic.questions.length - 1) {
                         sendQuestion(topic.questions[i+1], setQuestion);
                     }
                 }}>&gt;</button>
-                <button className={"p-4 mx-4 border border-solid" + (state === State.BLANK ? " bg-red-400" : " ")} onClick={()=>{setState(State.BLANK);qws.sendMessage({"blank": "blank"});}}>BLANK</button>
-                <button className={"p-4 mx-4 border border-solid" + (state === State.SCORE ? " bg-red-400" : " ")} onClick={()=>{setState(State.SCORE);qws.sendMessage({"score": "score"});}}>SCORE</button>
-                <button className={"p-4 mx-4 border border-solid" + (state === State.CLIENT ? " bg-red-400" : " ")} onClick={()=>{setState(State.CLIENT);qws.sendMessage({"client": "client"});}}>CLIENT</button>
+                <button className={"p-4 mx-4 my-box rounded-full " + (state === State.BLANK ? " bg-red-400" : " ")} onClick={()=>{setState(State.BLANK);qws.sendMessage({"blank": "blank"});}}>BLANK</button>
+                <button className={"p-4 mx-4 my-box rounded-full " + (state === State.SCORE ? " bg-red-400" : " ")} onClick={()=>{setState(State.SCORE);qws.sendMessage({"score": "score"});}}>SCORE</button>
+                <button className={"p-4 mx-4 my-box rounded-full " + (state === State.CLIENT ? " bg-red-400" : " ")} onClick={()=>{setState(State.CLIENT);qws.sendMessage({"client": "client"});}}>CLIENT</button>
             </div>
         )
     }
@@ -166,7 +173,7 @@
         if (topic && question) return (
             <div className="p-4 w-parent h-full flex flex-col border border-solid border-2 border-red-500">
                 <div className="p-4 text-xl font-bold text-center">{topic.topic || "---"}</div>
-                <div className={"h-full flex flex-col border border-solid border-2 border-gray-500"}>
+                <div className={"h-full flex flex-col border-gray-500"}>
                     {
                         question.type === "simple" ?
                             <div className={"p-4 text-2xl font-bold text-center p-4"}>{question.question}</div>
@@ -199,7 +206,7 @@
                     teams.map((t, i) => <div className={"flex flex-row"} key={t.name}>
                         <div className={"text-xl font-bold text-center p-4"}>{t.name}</div>
                         <div className={"text-xl font-bold text-center p-4"}>{t.score}</div>
-                        <button className={"p-2 border border-solid"} onClick={() => {
+                        <button className={"p-2 my-box rounded-full "} onClick={() => {
                             setTeams(teams => {
                                 let t = teams.map((tt, ii) => {
                                     if (i === ii) {
@@ -211,7 +218,7 @@
                                 return t;
                             });
                         }}>+</button>
-                        <button className={"p-2 border border-solid"} onClick={() => {
+                        <button className={"p-2 my-box rounded-full "} onClick={() => {
                             setTeams(teams => {
                                 let t = teams.map((tt, ii) => {
                                     if (i === ii) {
@@ -226,8 +233,8 @@
                     </div>)
                 }
                 <div className="flex flex-row justify-center">
-                    <input className="p-4 m-4 border border-solid" type="text" placeholder="Enter team name" onChange={e => setName(e.target.value)}/>
-                    <button className="p-4 m-4 border border-solid" onClick={() => {
+                    <input className="p-4 m-4 my-box rounded-full " type="text" placeholder="Enter team name" onChange={e => setName(e.target.value)}/>
+                    <button className="p-4 m-4 my-box rounded-full " onClick={() => {
                         setTeams(teams => {
                             let t = [
                                 ...teams,
